@@ -7,6 +7,7 @@ import operator
 from Tries import *
 import numpy as np
 from sklearn.preprocessing import MinMaxScaler
+from collections import Counter
 
 
 def normalize(_list, feature_range=(1, 255)):
@@ -48,11 +49,18 @@ def un_normalize(_list, scaler):
 
 def read_data():
 	with open('source.txt', 'r') as rf:
+		def dedupe(items):
+			seen = set()
+			for item in items:
+				if item not in seen:
+					yield item
+					seen.add(item)
 		string_list = []
-		for line in rf.readlines():
+		readlines = dedupe(rf.readlines())
+		for line in readlines:
 			line = line.strip()
 			# split_line = re.split(r'[（）\[\]【】《》\(\).\\、|，,\/\s-]', line)
-			split_line = re.split(r'[+\(\)\\|，,《》（）【】/、&\s]', line)
+			split_line = re.split(r'[：；\-\+\(\)\\|，,《》（）【】/、&\s]', line)
 
 			# print(split_line)
 			split_line = list(filter(None, split_line))
@@ -64,7 +72,7 @@ def read_data():
 def write_data(_dict, file_name):
 	print('dict len:{}'.format(len(_dict.keys())))
 	with open(file_name, 'w') as wf:
-		sorted_ = sorted(_dict.items(), key=operator.itemgetter(1), reverse=True)
+		sorted_ = sorted(_dict.items(), key=operator.itemgetter(0), reverse=True)
 		for k, v in sorted_:
 			wf.write('{}\t{}\n'.format(k, v))
 		# for k, v in pattern_dict.items():
@@ -108,7 +116,8 @@ def build_tries_by_sentence(pattern_dict, sentence):
 def get_longest_sentence(substring_list):
 	assert len(substring_list) > 0 and isinstance(substring_list, list)
 	substring_len_list = [len(substring) for substring in substring_list]
-	longest_index = [index for index, sl in enumerate(substring_len_list[1:]) if substring_len_list[index + 1] < substring_len_list[index]]
+	longest_index = [index for index, sl in enumerate(
+		substring_len_list[1:]) if substring_len_list[index + 1] < substring_len_list[index]]
 	longest_index.append(len(substring_len_list) - 1)  # append the last one
 	longest_sentence = [substring_list[index] for index in longest_index]
 
@@ -170,8 +179,6 @@ def empty_nodes_by_pefix(tries, key_fre_pair):
 	# print('')
 
 
-
-
 def filter_frequency_pattern():
 	def filter_dict(_dict):
 		if not isinstance(_dict, dict):
@@ -210,7 +217,8 @@ def filter_frequency_pattern():
 	print_prefix_sentence_fre(tries, test_sentence)
 	'''step 1'''
 	for longest_sentence in longest_sentence_list:
-		subpre_sentence_key_fre_pair = find_all_prefix_sentence(tries, longest_sentence)
+		subpre_sentence_key_fre_pair = find_all_prefix_sentence(
+			tries, longest_sentence)
 		# print(subpre_sentence_key_fre_pair)
 		empty_nodes_by_pefix(tries, subpre_sentence_key_fre_pair)
 		# subpre_sentence_key_fre_pair = find_all_prefix_sentence(tries, longest_sentence)
@@ -254,7 +262,8 @@ def find_frequency_pattern():
 			distict_substring = get_distinct_substring(string_list[i])
 			distict_substring = list(filter(None, distict_substring))
 			distict_substring = list(filter(lambda x: len(x) > 1, distict_substring))
-			distict_substring = list(filter(lambda x: not x.isdigit(), distict_substring))
+			distict_substring = list(
+				filter(lambda x: not x.isdigit(), distict_substring))
 			distict_substring_list.extend(distict_substring)
 			if i % batch_size == 0 and i is not 0:
 				yield distict_substring_list
@@ -284,12 +293,13 @@ def find_frequency_pattern():
 	pattern_dict = {}
 	string_list = read_data()
 	distict_substring_list_gen = get_all_distinct_substring(string_list)
-	pattern_dict = count_pattern_frequency(pattern_dict, distict_substring_list_gen)
+	pattern_dict = count_pattern_frequency(
+		pattern_dict, distict_substring_list_gen)
 	write_data(pattern_dict, 'frequency_pattern.txt')
 
 
 if __name__ == '__main__':
-	# find_frequency_pattern()
+	find_frequency_pattern()
 	filter_frequency_pattern()
 
 	# string_list = read_data()
