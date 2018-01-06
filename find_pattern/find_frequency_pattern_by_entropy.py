@@ -1,12 +1,15 @@
 #!/usr/bin/python3
 #-*-coding:utf-8 -*-
+import os
+import sys
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 import Tries
 import re
 from collections import Counter, defaultdict, ChainMap
 import math
 import jieba
 from help_func import write_data
-import os
+
 import multiprocessing as mp
 
 split_word = r'[：；\-\+\(\)\\|，,《》（）【】/、&\s]'

@@ -1,6 +1,7 @@
 import sys
 import os
 from product_reconization import Product_Recognition
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from help_func import write_data
 
 def load_model():
