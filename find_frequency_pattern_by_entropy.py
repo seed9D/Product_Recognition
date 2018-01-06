@@ -15,7 +15,7 @@ count_threshold = 10
 mutual_entropy_threshold =1e-4
 neighbor_entropy_threshold = 0.8
 cpu_num = mp.cpu_count()
-proccess_num = cpu_num - 1 if cpu_num > 3 else cpu_num
+proccess_num = cpu_num - 1
 
 def read_data():
     split_pat = re.compile(split_word)
@@ -110,9 +110,7 @@ def count_mutual_entropy(dict_, approcimate_total_word_num):
     return MI_dict
 
 
-def count_neighbor_entropy(*argc):
-    key, mapping_list = argc
-
+def count_neighbor_entropy(key, mapping_list):
     def entropy(list_):
         count_dict = Counter(list_)
         conditional_prob = [v / len(list_) for v in count_dict.values()]
@@ -130,13 +128,22 @@ def count_neighbor_entropy(*argc):
     # print(key, min(left_entropy, right_entropy))
     return (key, (min(left_entropy, right_entropy)))
 
-def run_batch(batch_dict):
-    assert(isinstance(batch_dict, dict))
+
+def run_batch(*argc):
+    assert(len(argc) == 2)
+    key_list, string_list = argc
+
+    def key_mappping():
+        for key in key_list:
+            mapping_list = []
+            for string in string_list:
+                if string.find(key) > 0:
+                    mapping_list.append(string)
+            yield key, mapping_list
     curerent_process = mp.current_process().name
     result_dict = {}
-    print('process: {}, batch_size: {}'.format(
-        curerent_process, len(batch_dict.keys())))
-    for key, mapping_list in batch_dict.items():
+    print('process: {} batch size: {}'.format(curerent_process, len(key_list)))
+    for key, mapping_list in key_mappping():
         k, free_degree = count_neighbor_entropy(key, mapping_list)
         result_dict[k] = free_degree
     return result_dict
@@ -150,18 +157,14 @@ def calculate_free_degree(string_list, dict_):
                     mapping_list.append(string)
             yield key, mapping_list
 
-    def get_batch(batch_size, input_data):
-        '''
-        @input_data: a generator
-        '''
-        ele_dict = defaultdict(list)
-        for ele in input_data:
-            key, mapping_list = ele
-            ele_dict[key] = mapping_list
-            if len(ele_dict.keys()) >= batch_size:
-                yield ele_dict
-                ele_dict = defaultdict(list)
-        yield ele_dict
+    def get_batch(batch_size):
+        key_list = []
+        for key in dict_.keys():
+            key_list.append(key)
+            if len(key_list) == batch_size:
+                yield key_list
+                key_list = []
+        yield key_list
 
     def multi_core(mapping_dict_gen):
         print('multi_core mode, proccess_num {}'.format(proccess_num))
@@ -171,10 +174,10 @@ def calculate_free_degree(string_list, dict_):
         print('total_computation: {}, batch size: {}'.format(
             total_computation, batch_size))
         multi_result = []
-        for batch_dict in get_batch(batch_size, mapping_dict_gen):
-            assert(isinstance(batch_dict, dict))
+        for batch_list in get_batch(batch_size):
+            assert(isinstance(batch_list, list))
             multi_result.append(pool.apply_async(
-                run_batch, args=(batch_dict, )))
+                run_batch, args=(*(batch_list, string_list), )))
         pool.close()
         pool.join()
         entropy_dict = ChainMap(*[result.get() for result in multi_result])
