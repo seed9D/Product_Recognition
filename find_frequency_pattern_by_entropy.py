@@ -142,10 +142,11 @@ def run_batch(*argc):
             yield key, mapping_list
     curerent_process = mp.current_process().name
     result_dict = {}
-    print('process: {} batch size: {}'.format(curerent_process, len(key_list)))
-    for key, mapping_list in key_mappping():
+    for index, (key, mapping_list) in enumerate(key_mappping()):
         k, free_degree = count_neighbor_entropy(key, mapping_list)
         result_dict[k] = free_degree
+        if index % 250 == 0:
+            print('process: {} {}/{}'.format(curerent_process, index, len(key_list)))
     return result_dict
 
 def calculate_free_degree(string_list, dict_):
@@ -194,29 +195,13 @@ def calculate_free_degree(string_list, dict_):
     #     # if neighbor_entropy_threshold < free_degree:
     #     entropy_dict[k] = free_degree
     entropy_dict = multi_core(mapping_dict_gen)
-    
-    # multi_result = [pool.apply_async(calculate_free_degree, args=(*(key, mapping_list), )) for key, mapping_list in mapping_dict_gen]
-    # match_list = []
-    # for string in mapping_list:
-    #     # match one word left and right
-    #     match = re.findall(r'(.){}(.)'.format(key), string)
-    #     for m in match:
-    #         match_list.append(m)
-    # left_entropy = entropy([m[0] for m in match_list])
-    # right_entropy = entropy([m[1] for m in match_list])
-    # entropy_dict[key] = int(min(left_entropy, right_entropy))
-    # print(key, min(left_entropy, right_entropy))
-    # pool.close()
-    # pool.join()
-    # for result in multi_result:
-    #     k, v = result.get()
-    #     entropy_dict[k] = v
     print('len free degree', len(entropy_dict.keys()))
     return entropy_dict
 
 def find_frequency_pattern():
     string_list = read_data()
-    approcimate_total_word_num = approcimate_total_world_num(string_list)
+    # approcimate_total_word_num = approcimate_total_world_num(string_list)
+    approcimate_total_word_num = len(string_list)
     print('total world len', approcimate_total_word_num)
     distict_substring_list_gen = get_all_distinct_substring(
         string_list, max_n_gram)
