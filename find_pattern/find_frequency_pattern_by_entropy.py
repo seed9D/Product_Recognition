@@ -247,5 +247,15 @@ def find_frequency_pattern():
     combine_detail_information(detail_dict, entropy_dict)
     write_detail(detail_dict)
 
+
+def find_short_word():
+    pass
+
+
+def find_product():
+    pass
+
 if __name__ == '__main__':
     find_frequency_pattern()
+    find_short_word()
+    find_product()
