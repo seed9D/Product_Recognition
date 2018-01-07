@@ -13,7 +13,10 @@ class Tries:
 	def __init__(self):
 		self.root = Trie_node()
 
-	def push_node(self, sentence, frequency=0):
+	def add_sentence(self, sentence, frequency=0):
+		'''
+		add by sentence
+		'''
 		sentence_len = len(sentence)
 		if sentence_len == 0:
 			return
@@ -26,6 +29,20 @@ class Tries:
 			temp = temp.child[word]
 			if index + 1 == sentence_len:
 				temp.count = frequency
+
+	def push_node(self, sentence, node):
+		'''
+		add by node
+		'''
+		if not node or len(sentence) == 0:
+			return
+		sentence_len = len(sentence)
+		temp = self.root
+		for index, word in enumerate(sentence):
+			if word not in temp.child:
+				temp.child[word] = node
+			temp = temp.child[word]
+
 
 	def search(self, sentence=None):
 		'''
@@ -67,6 +84,23 @@ class Tries:
 		# for key in key_list:
 		# 	print(key)
 		return key_list
+
+	def find_leaf_string(self):
+		def _find_leaf_string(trie_node):
+			key_list = []
+			if trie_node:
+				for pre_k, node in trie_node.child.items():
+					print(pre_k)
+					if not node.child:
+						key_list.append(pre_k)
+						print(pre_k)
+					temp_list = _find_leaf_string(node)
+					if temp_list:
+						for k in temp_list:
+							key_list.append(pre_k + k)
+			return key_list
+
+		return _find_leaf_string(self.root)
 
 	def search_word_by_prefix(self, prefix):
 		_, temp_node = self.search(prefix)
@@ -145,7 +179,7 @@ def build_tries_by_sentence(sentence):
 	sf = Suffix_Trees(sentence)
 	distict_substring = sf.total_distict_substring()
 	for substring in distict_substring:
-		tries.push_node(substring,)
+		tries.add_sentence(substring,)
 	return tries
 
 
@@ -165,7 +199,7 @@ def build_tries_by_dict(dict_):
 	assert isinstance(dict_, dict) and len(dict_.keys()) > 0
 	tries = Tries()
 	for k, v in dict_.items():
-		tries.push_node(k, v)
+		tries.add_sentence(k, v)
 	return tries
 
 
