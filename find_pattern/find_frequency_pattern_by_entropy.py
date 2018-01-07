@@ -41,17 +41,17 @@ def read_data():
         return string_list
 
 
-def write_detail(dict_):
+def write_detail(dict_, path):
     sorted_key = sorted(dict_.keys())
-    with open(os.path.join('./usr', 'detail_information.txt'), 'w') as wf:
+    with open(path, 'w') as wf:
         # for k, v in dict_.items():
         for k in sorted_key:
             v = dict_[k]
             # key, joint_probability, mutual entropy, left_entropy, right_entropy
-            wf.write('{}\t{:.6f}\t{:.6f}\t{:6f}\t{:6f}\n'.format(k, v[0][0], v[0][1], v[0][2], v[0][3]))
-            for left, write, left_pro, right_pro, pro_multiply, MI in v[1:]:
+            wf.write('{}\t{:.6f}\t{:.6f}\t{:6f}\t{:6f}\n'.format(k, float(v[0][0]), float(v[0][1]), float(v[0][2]), float(v[0][3])))
+            for left, right, left_pro, right_pro, pro_multiply, MI in v[1:]:
                 wf.write('\t{}\t{}\t{:.6f}\t{:.6f}\t{:.6f}\t{:.6f}\n'.format(
-                    left, write, left_pro, right_pro, pro_multiply, MI))
+                    left, right, float(left_pro), float(right_pro), float(pro_multiply), float(MI)))
         
 def approcimate_total_world_num(string_list):
     total_word_num = 0
@@ -243,7 +243,7 @@ def find_frequency_pattern():
     write_data(os.path.join('./usr', 'word_mutual_entropy.txt'), ('\t'.join([key, str(ent)]) for key, ent in list(sort_entropy)))
 
     entropy_dict = calculate_free_degree(string_list, MI_dict)
-    sort_entropy = sorted(entropy_dict.items(), key=lambda x: x[1], reverse=True)
+    sort_entropy = sorted(entropy_dict.items(), key=lambda x: min(x[1], x[2]), reverse=True)
     write_data(os.path.join('./usr', 'word_entropy.txt'), ('\t'.join([key, str(left), str(right)]) for key, (left, right) in list(sort_entropy)))
 
     del string_list, pattern_dict, sort_entropy

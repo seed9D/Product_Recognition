@@ -106,7 +106,7 @@ def build_tries_by_sentence(pattern_dict, sentence):
 	for substring in distict_substring:
 		if substring in pattern_dict:
 			fre = pattern_dict[substring]
-			tries.push_node(substring, fre)
+			tries.add_sentence(substring, fre)
 
 	# diff = [substring for substring in distict_substring if substring not in key_list]
 	# key_list = sorted(key_list, key=lambda x: len(x), reverse=True)
