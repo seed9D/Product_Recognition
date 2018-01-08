@@ -30,20 +30,6 @@ class Tries:
 			if index + 1 == sentence_len:
 				temp.count = frequency
 
-	def push_node(self, sentence, node):
-		'''
-		add by node
-		'''
-		if not node or len(sentence) == 0:
-			return
-		sentence_len = len(sentence)
-		temp = self.root
-		for index, word in enumerate(sentence):
-			if word not in temp.child:
-				temp.child[word] = node
-			temp = temp.child[word]
-
-
 	def search(self, sentence=None):
 		'''
 		return: Trie_node's count
@@ -88,16 +74,14 @@ class Tries:
 	def find_leaf_string(self):
 		def _find_leaf_string(trie_node):
 			key_list = []
-			if trie_node:
-				for pre_k, node in trie_node.child.items():
-					print(pre_k)
-					if not node.child:
-						key_list.append(pre_k)
-						print(pre_k)
+			if trie_node.child:
+				for key, node in trie_node.child.items():
 					temp_list = _find_leaf_string(node)
 					if temp_list:
 						for k in temp_list:
-							key_list.append(pre_k + k)
+							key_list.append(key + k)
+					else:
+						key_list.append(key)	
 			return key_list
 
 		return _find_leaf_string(self.root)
