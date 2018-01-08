@@ -71,17 +71,17 @@ class ALG():
         self.LOW_mutual_entropy_threshold = 1e-3  # reject
         self.HIGH_mutual_entropy_threshold = 2e-2
         self.MIDDLE_mutual_entropy_threshold = (self.LOW_mutual_entropy_threshold + self.HIGH_mutual_entropy_threshold) / 2
-        self.LOW_neighbor_entropy_threshold = 0.3  # reject
+        self.LOW_neighbor_entropy_threshold = 0.6  # reject
         self.HIGH_neighbor_entropy_threshold = 2.1
         self.MIDDLE_neighbor_entropy_threshold = (self.LOW_neighbor_entropy_threshold + self.HIGH_neighbor_entropy_threshold) / 2
         self.ratio_neighbor_entropy_threshold = 3
         
-        self.mutual_entropy_score_para = 100
+        self.mutual_entropy_score_para = 1000
         self.neighbor_entropy_score_para = 100
         self.threshold_step_visted_set = set()  # record visited key
         self.compare_min_component_step_visited_set = set()
         
-        self.debug_key = '儿早教'
+        self.debug_key = '积木玩具儿童'
         # self.traversal_leaf_key()
 
     def run(self):
@@ -97,6 +97,8 @@ class ALG():
         leaf_key_list = self.tries.find_leaf_string()
         leaf_key_list = sorted(leaf_key_list)
         logger.debug('leaf_key_list len {}'.format(len(leaf_key_list)))
+        # if self.debug_key not in leaf_key_list:
+        #     logger.debug('debug key {} not in leaf key list'.format(self.debug_key))
         for key in leaf_key_list:
             _, node = self.tries.search(key)
             if not node:
@@ -111,8 +113,11 @@ class ALG():
             瓶车价
             瓶车价格
         '''
-        prefix_key_list = [key[:i]
+        prefix_key_list = [key[:i + 1]
                            for i in range(len(key))]  # from short to long
+        # if key == self.debug_key:
+        #     logger.debug(key)
+        #     logger.debug(prefix_key_list)
         node_list = []
         for k in prefix_key_list:
             _, n = self.tries.search(k)
@@ -138,6 +143,8 @@ class ALG():
             if len(min_one.left_word) > 1 and len(min_one.right_word) > 1:
                 break
         if min_one:
+            if key == self.debug_key:
+                logger.debug('min component:{} {}'.format(min_one.left_word, min_one.right_word))
             _, left_MI_node = self.tries.search(min_one.left_word)
             _, right_MI_node = self.tries.search(min_one.right_word)
           
@@ -257,6 +264,8 @@ class ALG():
             logger.debug(self._score_dict[key])
 
     def threshold_step(self, key, node):
+        # if key == self.debug_key:
+        #     logger.debug(key)
         if key in self.threshold_step_visted_set or not node:
             return
         def compare_neighbor_entropy(add_score, reject_score):
@@ -272,7 +281,8 @@ class ALG():
 
         def compare_mutual_entropy(add_score, reject_score):
             if node.MI_entropy < self.LOW_mutual_entropy_threshold:
-                reject_score += (self.LOW_mutual_entropy_threshold * self.mutual_entropy_score_para)
+                reject_score += ((self.HIGH_mutual_entropy_threshold -
+                                 node.MI_entropy ) * self.mutual_entropy_score_para)
             elif node.MI_entropy > self.HIGH_mutual_entropy_threshold:
                 '''
                 high confidence
@@ -393,12 +403,13 @@ class ALG():
         postive_dict = {}
         for k, v in self._score_dict.items():
             # print('{} accept:{} reject {}'.format(k, v['accept'], v['reject']))
-            if v['accept'] > v['reject']:
+            if v['accept'] > v['reject'] and v['accept'] > 3:
                 postive_dict[k] = v
-        for k, v in postive_dict.items():
+                postive_dict[k]['accept'] = int(v['accept'])
+                postive_dict[k]['reject'] = int(v['reject'])
+        # for k, v in postive_dict.items():
             # print('{} accept:{} reject {}'.format(k, int(v['accept']), int(v['reject'])))
-            postive_dict[k]['accept'] = int(v['accept'])
-            postive_dict[k]['reject'] = int(v['reject'])
+           
         print('total postive record:{}'.format(len(postive_dict.keys())))
         return postive_dict
 
