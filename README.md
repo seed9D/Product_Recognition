@@ -13,15 +13,15 @@
 目標是要將上面的句子分詞，並找出哪些是產品名。
 
 ####困難處：
-* 特定領域的分詞，general 分詞器（Jieba hanglp) 可能效用不佳
-* 產品名歧異大，人可能都分不好
+* 特定領域的分詞任務，general 分詞器（Jieba hanglp) 可能效用不佳
+* 產品名歧異大，人都很難說準什麼是產品
 	* ex: 儿童组合滑梯淘气堡？ 淘气堡？ 组合滑梯？ 组合滑梯淘气堡？
 
 
 ####流程分成三大步驟：
 
 1. Pattern Discovery： 分詞和新詞發現 
-2. Human Correction: 發現的新詞和分詞，要經由人工校正並找出*詞意是產品名的詞彙
+2. Human Correction: 發現的新詞和分詞，要經由人工校正並找出**詞意**是產品的詞彙
 3. 神經網路學習 Product name 的組成
 
 ####Furtue work:
@@ -46,6 +46,7 @@
 	python3 find_pattern/find_frequency_pattern_by_entropy.py
 	
 * **find\_frequency\_pattern\_by\_entropy.py** 的 input 是一個未分詞的文件
+	* 預設在 **usr/find\_frequency\_pattern** 下的 **source.txt**
 
 * output 有三, 預設放在 **usr/find\_frequency\_pattern/** 下。
 	1. **word\_mutual\_entropy.txt**：記錄了 word 之間的 mutual entropy 格式如下 
@@ -74,7 +75,7 @@
 
 ### 分析 **detail\_information.txt**
 
-此步驟分析 **detail\_information.txt** 輸出*可能的有意義*詞彙給接下來的人工審核。
+此步驟分析 **detail\_information.txt** 輸出*可能有意義*的詞彙給接下來的人工審核。
 有意義的詞包含了 *產品名* 和 *一般詞彙*。
 
 	以下組合皆是有意義 ex: 毛绒玩具, 毛绒, 玩具
@@ -91,5 +92,25 @@
 ####Run code
 
 	python3 find_pattern/alg.py
+
+* Input 即是上述 **detail\_information.txt**
+* Ouput 有2，預設寫入 **usr/find\_frequency\_pattern** 之下
+	1. **all_alg.txt**: 記錄了對每個字段**'可能形成有意義詞彙'**的評分
+		* 格式： `字段	'accept score'	'reject score'`, 中間以 \t 分開
+		* ex: 
+	
+	```
+	音乐钓鱼	1	0
+	音乐闪光	16	0
+	音乐陀螺	1	0
+	音响	10	0
+	音箱	22	0
+	项目	60	0
+	```
+
+	2. **filtered_alg.txt**:
+
+####Alogrithmn
+
 
 	
