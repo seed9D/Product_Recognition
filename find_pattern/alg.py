@@ -81,7 +81,7 @@ class ALG():
         self.threshold_step_visted_set = set()  # record visited key
         self.compare_min_component_step_visited_set = set()
         
-        self.debug_key = '积木玩具儿童'
+        self.debug_key = '模型船'
         # self.traversal_leaf_key()
 
     def run(self):
@@ -151,8 +151,7 @@ class ALG():
             self.traversal_min_component_prefix_and_suffix(min_one.left_word)
             self.traversal_min_component_prefix_and_suffix(min_one.right_word)
 
-            self.detect_compound_word_step(
-                key, left_MI_node, right_MI_node)
+            self.detect_compound_word_step(key, min_one)
 
     def traversal_min_component_prefix_and_suffix(self, key):
         if key in self.compare_min_component_step_visited_set:
@@ -161,7 +160,8 @@ class ALG():
         self.compare_min_component_suffix_step(key)
         self.compare_min_component_step_visited_set.add(key)
     
-    def detect_compound_word_step(self, key, left_node, right_node):
+    def detect_compound_word_step(self, key, component):
+        assert(component)
         '''
         inorder to find out valid compound word
         principle:
@@ -170,8 +170,14 @@ class ALG():
         '''
         if len(key) in [2, 3]:
             return 
+        _, left_node = self.tries.search(component.left_word)
+        _, right_node = self.tries.search(component.right_word)
+        
         if not left_node or not right_node:
             return
+        if component.MI_entropy < self.LOW_mutual_entropy_threshold:
+            return
+
         if left_node.right_entropy > self.HIGH_neighbor_entropy_threshold and right_node.left_entropy > self.HIGH_neighbor_entropy_threshold:
             
             if left_node.left_entropy > self.HIGH_neighbor_entropy_threshold and right_node.right_entropy > self.HIGH_neighbor_entropy_threshold:
@@ -193,8 +199,8 @@ class ALG():
 
     
         if key == self.debug_key:
-            logger.debug('left left ent {}'.format(left_node.left_entropy))
-            logger.debug('right right ent {}'.format(right_node.right_entropy))
+            # logger.debug('left left ent {}'.format(left_node.left_entropy))
+            # logger.debug('right right ent {}'.format(right_node.right_entropy))
             logger.debug('{}: {}'.format(self.debug_key, self._score_dict[self.debug_key]))
 
     def _compare_min_component_step(self, key, tries):
@@ -403,7 +409,7 @@ class ALG():
         postive_dict = {}
         for k, v in self._score_dict.items():
             # print('{} accept:{} reject {}'.format(k, v['accept'], v['reject']))
-            if v['accept'] > v['reject'] and v['accept'] > 3:
+            if v['accept'] > v['reject']:
                 postive_dict[k] = v
                 postive_dict[k]['accept'] = int(v['accept'])
                 postive_dict[k]['reject'] = int(v['reject'])
