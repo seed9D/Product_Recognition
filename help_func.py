@@ -1,5 +1,9 @@
 import logging
+import os
 
+def check_dir_exist(path):
+	if not os.path.exists(path) and os.path.isdir(path):
+		os.makedirs(path)
 
 def create_log():
 	logger = logging.getLogger()

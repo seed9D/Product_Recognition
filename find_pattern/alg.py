@@ -8,9 +8,10 @@ root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(root_dir)
 import Tries as Tries
 import help_func as hf
+import argparse
 
 logger = hf.create_log()
-
+sub_dir = 'find_frequency_pattern'
 
 class Mutual_Entropy:
     def __init__(self, left_word, right_world, MI):
@@ -396,28 +397,11 @@ class ALG():
         _, node = self.tries.search(self.debug_key)
         print(self.debug_key, node.left_entropy)
    
-    def decision(self):
-        pass
-
-    def final(self):
+    def get_socre_dict(self):
         # for k, v in self._score_dict.items():
         #     print('{} accept:{} reject {}'.format(k, v['accept'], v['reject']))
         print('total record:{}'.format(len(self._score_dict.keys())))
         return self._score_dict
-    
-    def print_postive(self):
-        postive_dict = {}
-        for k, v in self._score_dict.items():
-            # print('{} accept:{} reject {}'.format(k, v['accept'], v['reject']))
-            if v['accept'] > v['reject']:
-                postive_dict[k] = v
-                postive_dict[k]['accept'] = int(v['accept'])
-                postive_dict[k]['reject'] = int(v['reject'])
-        # for k, v in postive_dict.items():
-            # print('{} accept:{} reject {}'.format(k, int(v['accept']), int(v['reject'])))
-           
-        print('total postive record:{}'.format(len(postive_dict.keys())))
-        return postive_dict
 
 def load_entropy_information(file_path):
     with open(file_path, 'r') as rf:
@@ -494,9 +478,21 @@ def write_dict(dict_, path):
             v = dict_[k]
             wf.write('{}\t{}\t{}\n'.format(k, v['accept'], v['reject']))
 
-def run_alg():
-    entropy_dict_ = load_entropy_information(os.path.join(
-        root_dir, 'usr', 'detail_information.txt'))
+
+def filtered_score_dict(score_dict):
+    filtered = {}
+    for k, v in score_dict.items():
+        # print('{} accept:{} reject {}'.format(k, v['accept'], v['reject']))
+        if v['accept'] > v['reject']:
+            filtered[k] = v
+            filtered[k]['accept'] = int(v['accept'])
+            filtered[k]['reject'] = int(v['reject'])
+
+    print('total filtered record:{}'.format(len(filtered.keys())))
+    return filtered
+
+def run_alg(detail_information_path, all_alg_path, filtered_alg_path):
+    entropy_dict_ = load_entropy_information(detail_information_path)
     tries = build_prefix_tree(entropy_dict_)
     reversed_tries = build_reverse_prefix_tree(entropy_dict_)
     logger.debug('entropy_dict_ len:{}'.format(len(entropy_dict_.keys())))
@@ -504,9 +500,37 @@ def run_alg():
     alg = ALG(tries, reversed_tries)
     alg.run()
     # alg.debug()
-    all_dict = alg.final()
-    positive_dict = alg.print_postive()
-    write_dict(all_dict, os.path.join(root_dir, 'usr', 'all_alg.txt'))
-    write_dict(positive_dict, os.path.join(root_dir, 'usr', 'postive_alg.txt'))
+    all_dict = alg.get_socre_dict()
+    filtered_dict = filtered_score_dict(all_dict)
+    write_dict(all_dict, all_alg_path)
+    write_dict(filtered_dict, filtered_alg_path)
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--user-dir',
+                        help='user dir path',
+                        action='store',
+                        dest='user_dir',
+                        default=os.path.join(root_dir, 'usr'))
+    default_user_dir = parser.parse_args().user_dir
+    parser.add_argument('--input', 
+                        help="the detail information file' path",
+                        action='store',
+                        dest='detail_information_path',
+                        default=os.path.join(default_user_dir, sub_dir, 'detail_information.txt'))
+    parser.add_argument('--output-result',
+                        help="output result path",
+                        action='store',
+                        dest='all_alg_path',
+                        default=os.path.join(default_user_dir, sub_dir, 'all_alg.txt'))
+    parser.add_argument('--output-filter',
+                        help='output the filtered result path',
+                        action='store',
+                        dest='filtered_alg_path',
+                        default=os.path.join(default_user_dir, sub_dir, 'filtered_alg.txt'))
+    args = parser.parse_args()
+    hf.check_dir_exist(os.path.join(args.user_dir, sub_dir))
+    run_alg(args.detail_information_path, args.all_alg_path, args.filtered_alg_path)
+
 if __name__ == '__main__':
-    run_alg()
+    main()

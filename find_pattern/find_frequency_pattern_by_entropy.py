@@ -2,16 +2,20 @@
 #-*-coding:utf-8 -*-
 import os
 import sys
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(root_dir)
 import Tries
 import re
 from collections import Counter, defaultdict, ChainMap
 import math
 import jieba
 from help_func import write_data
-
 import multiprocessing as mp
+import argparse
+import help_func as hf
 
+# user_file_dir = os.path.join('root_dir', 'usr')
+sub_dir = 'find_frequency_pattern'
 split_word = r'[：；\-\+\(\)\\|，,《》（）【】/、&\s]'
 max_n_gram = 8
 count_threshold = 10
@@ -20,9 +24,10 @@ neighbor_entropy_threshold = 0.7
 cpu_num = mp.cpu_count()
 proccess_num = cpu_num - 1
 
-def read_data():
+
+def read_source_file(path):
     split_pat = re.compile(split_word)
-    with open('source.txt', 'r') as rf:
+    with open(path, 'r') as rf:
         def dedupe(items):
             '''no duplicate'''
             seen = set()
@@ -41,7 +46,7 @@ def read_data():
         return string_list
 
 
-def write_detail(dict_, path):
+def write_detail(path, dict_):
     sorted_key = sorted(dict_.keys())
     with open(path, 'w') as wf:
         # for k, v in dict_.items():
@@ -70,7 +75,7 @@ def get_all_distinct_substring(string_list, n_gram=5):
 	    return sf.total_distict_substring()
 
     string_list_len = len(string_list)
-    print('total string list len:{}'.format(string_list_len))
+    # print('total string list len:{}'.format(string_list_len))
     distict_substring_list = []
     for i in range(string_list_len):
         distict_substring = get_distinct_substring(string_list[i])
@@ -207,8 +212,7 @@ def calculate_free_degree(string_list, dict_):
         multi_result = []
         for batch_list in get_batch(batch_size):
             assert(isinstance(batch_list, list))
-            multi_result.append(pool.apply_async(
-                run_batch, args=(*(batch_list, string_list), )))
+            multi_result.append(pool.apply_async(run_batch, args=(*(batch_list, string_list), )))
         pool.close()
         pool.join()
         entropy_dict = ChainMap(*[result.get() for result in multi_result])
@@ -229,8 +233,9 @@ def calculate_free_degree(string_list, dict_):
     return entropy_dict
 
 
-def find_frequency_pattern():
-    string_list = read_data()
+def find_frequency_pattern(source_file, MI_entropy_path, neighbor_entropy_path, detail_information_path):
+    string_list = read_source_file(source_file)
+    
     # approcimate_total_word_num = approcimate_total_world_num(string_list)
     approcimate_total_word_num = len(string_list)
     print('total world len', approcimate_total_word_num)
@@ -240,25 +245,44 @@ def find_frequency_pattern():
     MI_dict, detail_dict = calculate_mutual_entropy(
         pattern_dict, approcimate_total_word_num)
     sort_entropy = sorted(MI_dict.items(), key=lambda x: x[1], reverse=True)
-    write_data(os.path.join('./usr', 'word_mutual_entropy.txt'), ('\t'.join([key, str(ent)]) for key, ent in list(sort_entropy)))
+    write_data(MI_entropy_path,
+               ('\t'.join([key, str(ent)]) for key, ent in list(sort_entropy)))
 
     entropy_dict = calculate_free_degree(string_list, MI_dict)
-    sort_entropy = sorted(entropy_dict.items(), key=lambda x: min(x[1], x[2]), reverse=True)
-    write_data(os.path.join('./usr', 'word_entropy.txt'), ('\t'.join([key, str(left), str(right)]) for key, (left, right) in list(sort_entropy)))
+    sort_entropy = sorted(entropy_dict.items(), key=lambda x: x[1], reverse=True)
+    write_data(neighbor_entropy_path, ('\t'.join(
+        [key, str(left), str(right)]) for key, (left, right) in list(sort_entropy)))
 
     del string_list, pattern_dict, sort_entropy
     combine_detail_information(detail_dict, entropy_dict)
-    write_detail(detail_dict)
+    write_detail(detail_information_path, detail_dict)
 
 
-def find_short_word():
-    pass
-
-
-def find_product():
-    pass
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--user_dir',
+        help='user dir path',
+        action='store', 
+        dest='user_dir', 
+        default=os.path.join(root_dir, 'usr'))
+    default_user_dir = parser.parse_args().user_dir
+    parser.add_argument('--source',
+                        help='the file you want to find new word in',
+                        action='store',
+                        dest='source_file',
+                        default=os.path.join(default_user_dir, sub_dir, 'source.txt'))
+    parser.add_argument('--MI_entropy', help='output Mutual entropy file path',
+                        action='store', dest='MI_entropy_path', default=os.path.join(default_user_dir, sub_dir, 'word_mutual_entropy.txt'))
+    parser.add_argument('--neighbor_entropy', help='output neighbor entropy file path',
+                        action='store', dest='neighbor_entropy_path', default=os.path.join(default_user_dir, sub_dir , 'word_entropy.txt'))
+    parser.add_argument('--detail_inforamtion', help='output neightbor entropy and mutual entropy file path',
+                        action='store', dest='detail_information_path', default=os.path.join(default_user_dir, sub_dir, 'detail_information.txt'))
+    args = parser.parse_args()
+    # print(args)
+    hf.check_dir_exist(os.path.join(args.user_dir, sub_dir))
+    find_frequency_pattern(
+        args.source_file, args.MI_entropy_path, args.neighbor_entropy_path, args.detail_information_path)
 
 if __name__ == '__main__':
-    find_frequency_pattern()
-    find_short_word()
-    find_product()
+    main()
+    
