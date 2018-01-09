@@ -62,7 +62,63 @@ class Tree(Tries.Tries):
                 temp = temp.child[word]
             temp.copy_node(new_node)  # add new node at tail
 
-class ALG():
+class Base_Word():
+    '''
+    word len two or three
+    '''
+    def __init__(self, tries):
+        self.tries = tries
+        self.mutual_entropy_threshold = 7e-3
+        self.neighbor_entropy_threshold = 1.5
+        self.word_len_constraints = [2, 3, 4, 5, 6, 7]
+    def run(self):
+        key_node_gen = self.traversal_leaf_key()
+        # for ele in key_node_gen:
+        #     print(ele)
+        filtered_MI = filter(self.filter_MI, key_node_gen)
+        filtered_neighbor = set(filter(self.filter_neighbor_entropy, filtered_MI))
+        for k, n in filtered_neighbor:
+            print(k)
+        print(len(filtered_neighbor))
+
+    def traversal_leaf_key(self):
+        leaf_key_list = self.tries.find_leaf_string()
+        leaf_key_list = sorted(leaf_key_list)
+        logger.debug('leaf_key_list len {}'.format(len(leaf_key_list)))
+
+        for key in leaf_key_list:
+            yield from self.traversal_prefix(key)
+
+    def traversal_prefix(self, key):
+        prefix_key_list = [key[:i + 1]
+                            for i in range(len(key))]  # from short to long
+        node_list = []
+        for k in prefix_key_list:
+            _, n = self.tries.search(k)
+            if n and len(k) in self.word_len_constraints:
+                yield (k, n)
+        
+    def filter_MI(self, key_node):
+        key, node = key_node
+        MI_entropy = node.MI_entropy
+        if MI_entropy > self.mutual_entropy_threshold:
+            return True
+        return False
+
+    def filter_neighbor_entropy(self, key_node):
+        key, node = key_node
+        left_entropy = node.left_entropy
+        right_entropy = node.right_entropy
+        if min((left_entropy, right_entropy)) > self.neighbor_entropy_threshold:
+                # print(key, left_entropy, right_entropy)
+            return True
+        return False
+    
+    def fetch_filtered(self):
+        pass
+
+
+class Compound_Word():
     def __init__(self, tries, reversed_tries):
         self.tries = tries  # build based on prefix-word
         self.reversed_tries = reversed_tries  # build based on suffix-word
@@ -77,17 +133,23 @@ class ALG():
         self.MIDDLE_neighbor_entropy_threshold = (self.LOW_neighbor_entropy_threshold + self.HIGH_neighbor_entropy_threshold) / 2
         self.ratio_neighbor_entropy_threshold = 3
         
-        self.mutual_entropy_score_para = 1000
-        self.neighbor_entropy_score_para = 100
+        self.mutual_entropy_score_para = 1 / self.LOW_mutual_entropy_threshold
+        self.neighbor_entropy_score_para = 1 / self.LOW_neighbor_entropy_threshold
         self.threshold_step_visted_set = set()  # record visited key
         self.compare_min_component_step_visited_set = set()
         
-        self.debug_key = '模型船'
+        self.debug_key = '儿童户外滑梯'
         # self.traversal_leaf_key()
 
     def run(self):
-        self.traversal_leaf_key()
+        # self.find_short_word()
+        self.traversal_leaf_key(leaf_key_list)
 
+    def find_short_word(self, leaf_key_list):
+        for key in leaf_key_list:
+            _, node = self.tries.search(key)
+            
+        
     def _accept(self, key, score=1):
         self._score_dict[key]['accept'] += score
 
@@ -100,10 +162,11 @@ class ALG():
         logger.debug('leaf_key_list len {}'.format(len(leaf_key_list)))
         # if self.debug_key not in leaf_key_list:
         #     logger.debug('debug key {} not in leaf key list'.format(self.debug_key))
+        
         for key in leaf_key_list:
-            _, node = self.tries.search(key)
-            if not node:
-                continue
+            # _, node = self.tries.search(key)
+            # if not node:
+            #     continue
             # self.threshold_step(key, node)
             self.traversal_prefix(key)
 
@@ -276,13 +339,18 @@ class ALG():
         if key in self.threshold_step_visted_set or not node:
             return
         def compare_neighbor_entropy(add_score, reject_score):
-            if min(node.left_entropy, node.right_entropy) < self.LOW_neighbor_entropy_threshold:
-                reject_score += self.LOW_neighbor_entropy_threshold
-            elif node.left_entropy > self.HIGH_neighbor_entropy_threshold and node.right_entropy > self.HIGH_neighbor_entropy_threshold:
-                '''
-                high confidence
-                '''
-                add_score += (node.left_entropy + node.right_entropy)
+            list_ = [node.left_entropy, node.right_entropy]
+            if all(entropy < self.LOW_neighbor_entropy_threshold for entropy in list_):
+                reject_score += (self.LOW_neighbor_entropy_threshold *
+                                 2) * self.neighbor_entropy_score_para
+            elif all(entropy > self.HIGH_neighbor_entropy_threshold for entropy in list_):
+                add_score += ((node.left_entropy + node.right_entropy) * 2) 
+            elif any(entropy < self.LOW_neighbor_entropy_threshold for entropy in list_):
+                reject_score += self.LOW_neighbor_entropy_threshold * \
+                    self.neighbor_entropy_score_para
+            elif all(entropy > self.MIDDLE_neighbor_entropy_threshold for entropy in list_):
+                add_score += ((node.left_entropy + node.right_entropy) - self.MIDDLE_neighbor_entropy_threshold * 2
+                              ) * self.neighbor_entropy_score_para
             
             return add_score, reject_score
 
@@ -295,7 +363,11 @@ class ALG():
                 high confidence
                 '''
                 add_score += (node.MI_entropy * self.mutual_entropy_score_para)
+            # else:  # betwen Low and High
+            #     add_score = (
+            #         abs(node.MI_entropy - self.LOW_mutual_entropy_threshold) * self.mutual_entropy_score_para)
             return add_score, reject_score
+        
         add_score = reject_score = 0
         add_score, reject_score = compare_mutual_entropy(add_score, reject_score)
         add_score, reject_score = compare_neighbor_entropy(add_score, reject_score)
@@ -497,13 +569,16 @@ def run_alg(detail_information_path, all_alg_path, filtered_alg_path):
     reversed_tries = build_reverse_prefix_tree(entropy_dict_)
     logger.debug('entropy_dict_ len:{}'.format(len(entropy_dict_.keys())))
     del entropy_dict_
-    alg = ALG(tries, reversed_tries)
-    alg.run()
-    # alg.debug()
-    all_dict = alg.get_socre_dict()
-    filtered_dict = filtered_score_dict(all_dict)
-    write_dict(all_dict, all_alg_path)
-    write_dict(filtered_dict, filtered_alg_path)
+    bw = Base_Word(tries)
+    bw.run()
+    bw.fetch_filtered()
+    # alg = ALG(tries, reversed_tries)
+    # alg.run()
+    # # alg.debug()
+    # all_dict = alg.get_socre_dict()
+    # filtered_dict = filtered_score_dict(all_dict)
+    # write_dict(all_dict, all_alg_path)
+    # write_dict(filtered_dict, filtered_alg_path)
 
 def main():
     parser = argparse.ArgumentParser()
