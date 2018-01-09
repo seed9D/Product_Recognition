@@ -41,6 +41,7 @@
 
 ### 計算詞彙的 Entropy
 把所有的詞彙組合找出來
+
 ####Run code
 	python3 find_pattern/find_frequency_pattern_by_entropy.py
 	
@@ -54,7 +55,7 @@
 		* 格式：`詞彙	左側自由度	右側自由度` 中間以 \t 隔開
 		* ex：`遥控特技车	0.6365141682948128	0.6365141682948128`
 
-	3. **detail\_information.txt** 包含了詞彙的mutual entropy 以及跟左右兩側的自由度，還加入了運算共乘中的詞彙出現在語料中的機率。
+	3. **detail\_information.txt** 包含了詞彙的mutual entropy 以及跟左右兩側的自由度，還加入了詞彙出現在語料中的機率。
 		*	格式：同時完整記錄每個詞彙的內部組成，中間以 \t 分開。
 
 ```
@@ -86,6 +87,7 @@
 	室内儿童淘气堡: 内儿童淘气堡, 童淘气堡, 气堡
 
 因此，**alg.py** 實現了一套框架以及演算法針對 **detail\_information.txt** 挖掘
+
 ####Run code
 
 	python3 find_pattern/alg.py
