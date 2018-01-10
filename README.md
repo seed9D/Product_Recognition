@@ -37,9 +37,15 @@
  [More detail](./find_pattern/README.md)
 ### 計算詞彙的 Entropy
 ####Run code
+
 	python3 find_pattern/find_frequency_pattern_by_entropy.py
 
 ### 分析 **detail\_information.txt**
 ####Run code
+
 	python3 find_pattern/alg.py
 
+## Human Correction
+
+
+## Model build
