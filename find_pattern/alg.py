@@ -137,17 +137,15 @@ class Compound_Word():
         self.neighbor_entropy_score_para = 1 / self.LOW_neighbor_entropy_threshold
         self.threshold_step_visted_set = set()  # record visited key
         self.compare_min_component_step_visited_set = set()
-        
-        self.debug_key = '儿童户外滑梯'
-        # self.traversal_leaf_key()
+        self.debug_key = '专业生'
 
     def run(self):
         # self.find_short_word()
-        self.traversal_leaf_key(leaf_key_list)
+        self.traversal_leaf_key()
 
-    def find_short_word(self, leaf_key_list):
-        for key in leaf_key_list:
-            _, node = self.tries.search(key)
+    # def find_short_word(self, leaf_key_list):
+    #     for key in leaf_key_list:
+    #         _, node = self.tries.search(key)
             
         
     def _accept(self, key, score=1):
@@ -227,7 +225,7 @@ class Compound_Word():
     def detect_compound_word_step(self, key, component):
         assert(component)
         '''
-        inorder to find out valid compound word
+        in order to find out valid compound word
         principle:
             left component's right neighgor entropy is high
             right component's left neighbor entropy is high
@@ -241,22 +239,24 @@ class Compound_Word():
             return
         if component.MI_entropy < self.LOW_mutual_entropy_threshold:
             return
-
-        if left_node.right_entropy > self.HIGH_neighbor_entropy_threshold and right_node.left_entropy > self.HIGH_neighbor_entropy_threshold:
-            
-            if left_node.left_entropy > self.HIGH_neighbor_entropy_threshold and right_node.right_entropy > self.HIGH_neighbor_entropy_threshold:
+        LR_RL = [left_node.right_entropy, right_node.left_entropy]
+        LL_RR = [left_node.left_entropy, right_node.right_entropy]
+        if all(entropy > self.HIGH_neighbor_entropy_threshold for entropy in LR_RL):            
+            if all(entropy > self.HIGH_neighbor_entropy_threshold for entropy in LL_RR ):
                 add_score = right_node.left_entropy + \
                     left_node.right_entropy + left_node.left_entropy + right_node.right_entropy
-                self._accept(key, add_score)
-            elif left_node.left_entropy < self.LOW_neighbor_entropy_threshold or right_node.right_entropy < self.LOW_neighbor_entropy_threshold:
-                self._reject(key)
-            elif left_node.left_entropy > self.MIDDLE_neighbor_entropy_threshold and right_node.right_entropy > self.MIDDLE_neighbor_entropy_threshold:
-                self._accept(key)
+                self._accept(key, add_score * self.HIGH_neighbor_entropy_threshold)
+            elif any(entropy < self.LOW_neighbor_entropy_threshold for entropy in LL_RR):
+                self._reject(
+                    key, self.MIDDLE_neighbor_entropy_threshold * self.neighbor_entropy_score_para)
+            elif all(entropy > self.MIDDLE_neighbor_entropy_threshold for entropy in LL_RR):
+                self._accept(
+                    key, self.MIDDLE_neighbor_entropy_threshold * self.neighbor_entropy_score_para)
             else:
                 pass
-        elif left_node.right_entropy < self.LOW_neighbor_entropy_threshold and right_node.left_entropy < self.LOW_neighbor_entropy_threshold:
+        elif all(entropy < self.LOW_neighbor_entropy_threshold for entropy in LR_RL):
             reject_score = (
-                self.HIGH_neighbor_entropy_threshold - min((left_node.right_entropy, right_node.left_entropy)))
+                self.HIGH_neighbor_entropy_threshold - min((left_node.right_entropy, right_node.left_entropy))) * self.neighbor_entropy_score_para
             self._reject(key, reject_score)
         else:
             self._reject(key)
@@ -306,9 +306,10 @@ class Compound_Word():
                 key_count += 1
 
         if key_count > len(component_list) * 0.5:
-            self._accept(key)
+            self._accept(key, key_count *
+                         self.HIGH_mutual_entropy_threshold)
         elif len(component_list) * (0.2) > key_count:
-            self._reject(key)
+            self._reject(key, self.MIDDLE_mutual_entropy_threshold  * (len(component_list) - key_count))
         if key == self.debug_key:
             logger.debug(self._score_dict[self.debug_key])
 
@@ -324,9 +325,10 @@ class Compound_Word():
                 key_count += 1
 
         if key_count > len(component_list) * 0.5:
-            self._accept(key)
+            self._accept(key, key_count *
+                         self.HIGH_mutual_entropy_threshold)
         elif len(component_list) * (0.2) > key_count:
-            self._reject(key)
+            self._reject(key, self.MIDDLE_mutual_entropy_threshold * (len(component_list) - key_count))
         
         if key == self.debug_key:
             logger.debug('key_count:{} node list len:{}'.format(
@@ -362,7 +364,9 @@ class Compound_Word():
                 '''
                 high confidence
                 '''
-                add_score += (node.MI_entropy * self.mutual_entropy_score_para)
+                list_ = [node.left_entropy, node.right_entropy]
+                if all(entropy > self.HIGH_neighbor_entropy_threshold for entropy in list_):
+                    add_score += (node.MI_entropy * self.mutual_entropy_score_para)
             # else:  # betwen Low and High
             #     add_score = (
             #         abs(node.MI_entropy - self.LOW_mutual_entropy_threshold) * self.mutual_entropy_score_para)
@@ -395,8 +399,9 @@ class Compound_Word():
                 if min((vise_entropy, entropy)) > self.MIDDLE_neighbor_entropy_threshold:
                     if abs(entropy) > self.ratio_neighbor_entropy_threshold * abs(previous_entropy):
             
-                        self._accept(key, entropy)
-                        self._reject(previous_key, abs(entropy - previous_entropy))
+                        self._accept(key, entropy * self.neighbor_entropy_score_para)
+                        self._reject(previous_key, abs(
+                            entropy - previous_entropy) * self.neighbor_entropy_score_para)
 
                 previous_entropy = entropy
                 if key == self.debug_key:
@@ -557,8 +562,8 @@ def filtered_score_dict(score_dict):
         # print('{} accept:{} reject {}'.format(k, v['accept'], v['reject']))
         if v['accept'] > v['reject']:
             filtered[k] = v
-            filtered[k]['accept'] = int(v['accept'])
-            filtered[k]['reject'] = int(v['reject'])
+            filtered[k]['accept'] = round(v['accept'], 4)
+            filtered[k]['reject'] = round(v['reject'], 4)
 
     print('total filtered record:{}'.format(len(filtered.keys())))
     return filtered
@@ -569,16 +574,16 @@ def run_alg(detail_information_path, all_alg_path, filtered_alg_path):
     reversed_tries = build_reverse_prefix_tree(entropy_dict_)
     logger.debug('entropy_dict_ len:{}'.format(len(entropy_dict_.keys())))
     del entropy_dict_
-    bw = Base_Word(tries)
-    bw.run()
-    bw.fetch_filtered()
-    # alg = ALG(tries, reversed_tries)
-    # alg.run()
+    # bw = Base_Word(tries)
+    # bw.run()
+    # bw.fetch_filtered()
+    alg = Compound_Word(tries, reversed_tries)
+    alg.run()
     # # alg.debug()
-    # all_dict = alg.get_socre_dict()
-    # filtered_dict = filtered_score_dict(all_dict)
-    # write_dict(all_dict, all_alg_path)
-    # write_dict(filtered_dict, filtered_alg_path)
+    all_dict = alg.get_socre_dict()
+    filtered_dict = filtered_score_dict(all_dict)
+    write_dict(all_dict, all_alg_path)
+    write_dict(filtered_dict, filtered_alg_path)
 
 def main():
     parser = argparse.ArgumentParser()

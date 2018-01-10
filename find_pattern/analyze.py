@@ -57,7 +57,8 @@ def compare_real_and_pos(real, alg_guess):
 
 def analyze():
     real_set = load_real_file(os.path.join(root_dir, 'usr', 'word_.txt'))
-    all_alg_dict = load_alg_file(os.path.join(root_dir, 'usr', 'all_alg.txt'))
+    all_alg_dict = load_alg_file(os.path.join(
+        root_dir, 'usr', 'find_frequency_pattern', 'all_alg.txt'))
     positive_dict = filter_positive(all_alg_dict)
     compare_real_and_pos(real_set, positive_dict)
 
