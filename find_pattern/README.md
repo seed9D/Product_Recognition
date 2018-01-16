@@ -8,9 +8,10 @@
 ### 計算詞彙的 Entropy
 把所有的詞彙組合找出來
 
-####Run code
+#### Run code
+```
 	python3 find_pattern/find_frequency_pattern_by_entropy.py
-	
+```	
 * **find\_frequency\_pattern\_by\_entropy.py** 的 input 是一個未分詞的文件
 	* 預設在 **usr/find\_frequency\_pattern** 下的 **source.txt**
 
@@ -56,10 +57,10 @@
 
 執行檔 **alg.py** 實現了一套框架以及演算法針對 **detail\_information.txt** 挖掘
 
-####Run code
-
+#### Run code
+```
 	python3 find_pattern/alg.py
-
+```
 * Input 即是上述 **detail\_information.txt**
 * Ouput 有2，預設寫入 **usr/find\_frequency\_pattern** 之下
 	1. **all_alg.txt**: 記錄了對每個字段**'可能形成有意義詞彙'**的評分
