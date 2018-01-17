@@ -2,11 +2,12 @@ import jieba
 import os
 import sys
 import re
-import help_func as hf
+import argparse
 from Tag import Token, Tag_BIESO, token2String, write_tag2file, token2String_word_only
-root_dir = os.path.dirname(os.path.abspath(__file__))
-data_dir = os.path.join(root_dir, 'usr')
-
+root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(root_dir)
+import help_func as hf
+sub_dir = 'training_model'
 
 def segment_product(product_list, base_word_list):
 	for word in base_word_list:
@@ -40,7 +41,7 @@ def segment_source(string_list, word_list):
 	return sentence_one_line
 
 
-def tag_source(word_list, product_list):
+def tag_source(source_list, product_list, word_list):
 	def filter_token_list(token_list):
 		token_num = len(token_list)
 		BIES_tag_num = 0
@@ -105,7 +106,7 @@ def tag_source(word_list, product_list):
 		return token_list
 
 	product_dict = segment_product(product_list, word_list)
-	sentences = segment_source(string_list, word_list)
+	sentences = segment_source(source_list, word_list)
 
 	postive_list = []
 	negative_list = []
@@ -119,23 +120,56 @@ def tag_source(word_list, product_list):
 		segement_list.append(token2String_word_only(token_list, separator=' '))
 
 	print('tag successful len:{}; tag failed len:{}'.format(len(postive_list), len(negative_list)))
-	hf.write_data(os.path.join(data_dir, 'source_tag.txt'), postive_list)
-	hf.write_data(os.path.join(data_dir, 'source_tag_negative.txt'), negative_list)
-	hf.write_data(os.path.join(data_dir, 'source_segement.txt'), segement_list)
-
+	return postive_list, negative_list, segement_list
 	# string_one_line = (proccess_line(sentence, product_dict) for sentence in sentences)
 	# hf.write_data(os.path.join(data_dir, 'source_tag.txt'), string_one_line)
 
+def start_tag(source_file_p, product_file_p, base_word_file_p, output_dir):
 
-if __name__ == '__main__':
-	product_list = hf.read_data(os.path.join(data_dir, 'product.txt'))
-	word_list = hf.read_data(os.path.join(data_dir, 'short_word.txt'))
-	string_list = hf.read_data(os.path.join(data_dir, 'source.txt'))
+	product_list = hf.read_data(product_file_p)
+	word_list = hf.read_data(base_word_file_p)
+	source_list = hf.read_data(source_file_p)
 	print('product_list len:{}'.format(len(product_list)))
 	print('word_list len:{}'.format(len(word_list)))
-	print('string_list(wait to be tagged) len:{}'.format(len(string_list)))
+	print('source_list(wait to be tagged) len:{}'.format(len(source_list)))
 	# sentences = segment_source(string_list, word_list)
 	# hf.write_data(os.path.join(data_dir, 'source_segement.txt'), sentences)
+
+	postive_list, negative_list, segement_list = tag_source(
+		source_list, product_list, word_list)
+
+	hf.write_data(os.path.join(output_dir, 'source_tag.txt'), postive_list)
+	hf.write_data(os.path.join(output_dir, 'source_tag_negative.txt'), negative_list)
+	hf.write_data(os.path.join(output_dir, 'source_segement.txt'), segement_list)
+	write_tag2file(Tag_BIESO, os.path.join(output_dir, 'tag_vocab.txt'))
+
+def main():
+	parser = argparse.ArgumentParser()
+	parser.add_argument('source_file',
+                     	help='the file you want to tag with product',
+                     	action='store',
+                    	)
+	parser.add_argument('product_file',
+                        help='the file contain product name',
+                        action='store',
+                        )
+	parser.add_argument('base_word_file',
+                     	help='the file contain base word',
+                     	action='store',
+                    	)
 	
-	tag_source(word_list, product_list)
-	write_tag2file(Tag_BIESO, os.path.join(data_dir, 'tag_vocab.txt'))
+	parser.add_argument('--user_dir',
+                        help='user dir path',
+                        action='store',
+                        dest='user_dir',
+                        default=os.path.join(root_dir, 'usr'))
+	args = parser.parse_args()
+	output_dir = os.path.join(args.user_dir, sub_dir)
+	hf.check_dir_exist(output_dir)
+	# output_tagged_file_path = os.path.join(output_dir, 'source_tag.txt')
+	start_tag(args.source_file, args.product_file, args.base_word_file, output_dir)
+
+
+
+if __name__ == '__main__':
+	main()
