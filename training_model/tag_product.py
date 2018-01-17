@@ -163,6 +163,7 @@ def main():
                         action='store',
                         dest='user_dir',
                         default=os.path.join(root_dir, 'usr'))
+
 	args = parser.parse_args()
 	output_dir = os.path.join(args.user_dir, sub_dir)
 	hf.check_dir_exist(output_dir)
