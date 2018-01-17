@@ -5,6 +5,7 @@
 * 發現的詞用於之後深度學習
 * 盡量減少人工審核時的人工量
 
+****
 ### 計算詞彙的 Entropy
 把所有的詞彙組合找出來
 
@@ -40,6 +41,7 @@
 ```
 最主要會用到 **detail\_information.txt** 其他兩個皆是參考, 決定hyper parameter用
 
+****
 ### 分析 **detail\_information.txt**
 
 此步驟分析 **detail\_information.txt** 輸出*可能有意義*的詞彙給接下來的人工審核。
@@ -75,6 +77,8 @@
 	```
 
 	2. **filtered_alg.txt**: 初步將 accept score 大於 reject score 的字段挑選出來。當然， 挑選規則可以自行決定
+
+****
 
 ####Alogrithmn
 在 **alg.py** 對字段評分的思路如下：

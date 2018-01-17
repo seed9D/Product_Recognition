@@ -1,8 +1,9 @@
 ## Human Correction
 
 ### 目標
-* 人工標注在 **find frequency pattern** 裡挖掘出的詞彙
+* 人工標注在 **find frequency pattern** 裡挖掘出的詞彙，標注出哪些詞彙是產品名 ，賦予字彙辭意
 
+****
 ### Add Reference
 * 為所有詞彙加上 協助/幫助 判斷的句子
 
@@ -35,7 +36,7 @@
     人偶服装        2.25    0       卡通人偶服装
     人偶服饰        2.25    0       卡通人偶服饰
     ```
-
+****
 ### 人工標注
 
 1. 開啟 **usr/human_correction/recognition_reference.txt**
@@ -64,7 +65,7 @@
   * 每行前面有 *-* 號者，代表刪除整段 (line 2,3,4,5,8,18)
   * 只留下有意義的詞，並在產品明後方標注 **P**
 
-
+****
 ### Seperate Word and Product
 
 此步驟將標注完的檔案分開成兩個檔案，一個全是商品名，一個全是有意義詞
@@ -100,7 +101,7 @@ python3 Human_Correction/seperate_product.py [tagged_file]
   套装批发
   套餐
   ```
-
+****
 ### Decompse word
 
 此步驟是進一步將組合詞/複合字拆解成基本詞
@@ -125,3 +126,4 @@ python3 Human_Correction/word_decompose.py usr/human_correction/word.txt
   喷球车
   发音
   ```
+
