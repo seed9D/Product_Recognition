@@ -39,15 +39,11 @@
  [More detail](./find_pattern/README.md)
 ### 計算詞彙的 Entropy
 
-#### Run code
-
 ```
 python3 find_pattern/find_frequency_pattern_by_entropy.py
 ```
 
 ### 分析 **detail\_information.txt**
-
-#### Run code
 
 ```
 python3 find_pattern/alg.py
@@ -60,8 +56,6 @@ python3 find_pattern/alg.py
 
 ### Add Reference
 
-#### Run code
-
 ```
 python3 Human_Correction/add_reference.py usr/find_frequency_pattern/filtered_alg.txt usr/find_frequency_pattern/source.txt
 ```
@@ -72,14 +66,10 @@ python3 Human_Correction/add_reference.py usr/find_frequency_pattern/filtered_al
 
 ### Seperate Word and Product
 
-#### Run code
-
 ```
 python3 Human_Correction/seperate_product.py [tagged_file]
 ```
 ### Decompse word
-
-#### Run code
 
 ```
 python3 Human_Correction/word_decompose.py usr/human_correction/word.txt
@@ -92,7 +82,6 @@ python3 Human_Correction/word_decompose.py usr/human_correction/word.txt
 
 ### Tagging Source
 
-#### Run Code
 
 ```
 python3 training_model/tag_product.py usr/find_frequency_pattern/source.txt usr/human_correction/product.txt usr/human_correction/base_word.txt
@@ -113,7 +102,6 @@ python3 training_model/tag_product.py usr/find_frequency_pattern/source.txt usr/
 ## Run Recognization
 [More detail](./recognition/README.md)
 
-#### Run code
 
 ```
 python3 recognition/product_recognition_test.py usr/recognition/hz_chinese_50.txt
