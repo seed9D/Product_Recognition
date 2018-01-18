@@ -149,7 +149,8 @@ python3 training_model/tag_product.py usr/find_frequency_pattern/source.txt usr/
     利用tensorlfow 提供的 freeze_graph.py 將網路圖和參數固化到一個檔案
   4. dump vector index：
     將詞向量和字向量 vector 所代表的詞彙以index表示
-    詞向量 索引:
+    
+      詞向量 索引:
       ```
       驾驶台  10420
       折合    10418
@@ -184,7 +185,7 @@ python3 training_model/tag_product.py usr/find_frequency_pattern/source.txt usr/
     ```
     * 輸入有四：
     **source_segement.txt**、**source_tag.txt**、**tag_vocab.txt** 在前面提過。
-    **char_vec.txt** 即字向量，由人民日報語料訓練得出([kcws](https://github.com/koth/kcws))
+    **char_vec.txt** 即字向量，由人民日報語料訓練得出([kcws](https://github.com/koth/kcws))，已放置在  **usr/training_model/char_vec.txt**
     * 主要輸出有三，預設放置在 **/usr/training_model** 下
       1. **product_model.pbtxt**: 訓練出的的神經網路模型
       2. **char_vec_index.txt**: 字向量索引
