@@ -8,7 +8,7 @@ root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 sys.path.append(root_dir)
 import help_func as hf
 sub_dir = 'recognition'
-
+sub_dir_path = os.path.join(root_dir, 'usr', sub_dir)
 
 def load_model(model_p, char_vec_index_p, word_vec_inde_p, tag_vob_p):
     frozen_graph_filename = model_p
@@ -36,7 +36,7 @@ def load_test_file(file_path):
         return test_list
 
 
-def load_unrecongnization_file(file_path):
+def load_unrecongnition_file(file_path):
     with open(file_path, mode='r') as rf:
         ur_list = []
         for line in rf.readlines():
@@ -46,7 +46,7 @@ def load_unrecongnization_file(file_path):
         return ur_list
 
 
-def write_recongnization_result(path, result_list):
+def write_recongnition_result(path, result_list):
     with open(os.path.join(path), mode='w') as wf:
         for one_line in result_list:
             for token in one_line:
@@ -78,7 +78,6 @@ def fetch_product_name(result_list):
     print()
     return product_set
 
-
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('test_file',
@@ -89,39 +88,39 @@ def main():
                         help='output path of recongnized result',
                         action='store',
                         dest='output_recognize_result',
-                        default=os.path.join(root_dir, 'usr', sub_dir, 'recognize_result.txt'))
+                        default=os.path.join(sub_dir_path, 'recognize_result.txt'))
     
     parser.add_argument('--product_name_result',
                         help='output path of recongnized product_name',
                         action='store',
                         dest='output_product_name_result',
-                        default=os.path.join(root_dir, 'usr', sub_dir, 'discover_word.txt'))
+                        default=os.path.join(sub_dir_path, 'discover_word.txt'))
 
     parser.add_argument('--frozen_graph',
                         help='recognization model path',
                         action='store',
                         dest='model_path',
-                        default=os.path.join(root_dir, 'usr', sub_dir, 'product_model.pbtxt'))
+                        default=os.path.join(root_dir, 'usr', 'training_model', 'product_model.pbtxt'))
     
     parser.add_argument('--char_vec_index',
                         help='char vector index file path',
                         dest='char_index_path',
-                        default=os.path.join(root_dir, 'usr', sub_dir, 'char_vec_index.txt'))
+                        default=os.path.join(root_dir, 'usr', 'training_model', 'char_vec_index.txt'))
     
     parser.add_argument('--word_vec_index',
                         help='word vector index file path',
                         dest='word_index_path',
-                        default=os.path.join(root_dir, 'usr', sub_dir, 'word_vec_index.txt'))
+                        default=os.path.join(root_dir, 'usr', 'training_model', 'word_vec_index.txt'))
     
     parser.add_argument('--tag_vob',
                         help='tag scheme index path',
                         dest='tag_vob_path',
-                        default=os.path.join(root_dir, 'usr', sub_dir, 'tag_vocab.txt'))
+                        default=os.path.join(root_dir, 'usr', 'training_model', 'tag_vocab.txt'))
 
     args = parser.parse_args()
-    hf.check_dir_exist(args.output_path)
+    hf.check_dir_exist(sub_dir_path)
 
-    input_list = load_unrecongnization_file(args.test_file)
+    input_list = load_unrecongnition_file(args.test_file)
     recognition_result_list = run_product_recognition(
         input_list, args.model_path, args.char_index_path, args.word_index_path, args.tag_vob_path)
     
@@ -130,7 +129,7 @@ def main():
     product_name_set = fetch_product_name(recognition_result_list)
 
     hf.write_data(args.output_product_name_result, product_name_set)
-    write_recongnization_result(
+    write_recongnition_result(
         args.output_recognize_result, recognition_result_list)
     
 # def main(argc, argv):
@@ -149,4 +148,4 @@ def main():
 
 
 if __name__ == '__main__':
-    main(len(sys.argv), sys.argv)
+    main()
