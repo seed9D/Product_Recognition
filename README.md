@@ -32,6 +32,7 @@
 
 
 
+****
 
 ## Pattern Discovery
 
@@ -41,7 +42,7 @@
 #### Run code
 
 ```
-	python3 find_pattern/find_frequency_pattern_by_entropy.py
+python3 find_pattern/find_frequency_pattern_by_entropy.py
 ```
 
 ### 分析 **detail\_information.txt**
@@ -49,8 +50,11 @@
 #### Run code
 
 ```
-	python3 find_pattern/alg.py
+python3 find_pattern/alg.py
 ```
+
+****
+
 ## Human Correction
 [More detail](./Human_Correction/README.md)
 
@@ -59,7 +63,7 @@
 #### Run code
 
 ```
-  python3 Human_Correction/add_reference.py usr/find_frequency_pattern/filtered_alg.txt usr/find_frequency_pattern/source.txt
+python3 Human_Correction/add_reference.py usr/find_frequency_pattern/filtered_alg.txt usr/find_frequency_pattern/source.txt
 ```
 
 ### 人工標注
@@ -81,4 +85,36 @@ python3 Human_Correction/seperate_product.py [tagged_file]
 python3 Human_Correction/word_decompose.py usr/human_correction/word.txt
 ```
 
-## Model build
+****
+
+## Training Model
+[More detail](./training_model/README.md)
+
+### Tagging Source
+
+#### Run Code
+
+```
+python3 training_model/tag_product.py usr/find_frequency_pattern/source.txt usr/human_correction/product.txt usr/human_correction/base_word.txt
+```
+
+### Training NER model
+
+在[kcws](https://github.com/koth/kcws)中，訓練過程較為繁瑣，按照下面python檔案即可濃縮步驟
+
+1. 切換到 **training_model/kcws** 執行 `./configure` [構建](https://github.com/koth/kcws/blob/master/README.md#%E6%9E%84%E5%BB%BA) 完成環境部署
+2. 切回根目錄執行 **training_model/training_model.py**，內含 training NER的所有步驟
+    ```
+    python3 training_model/training_model.py usr/training_model/source_segement.txt usr/training_model/source_tag.txt usr/training_model/tag_vocab.txt usr/training_model/char_vec.txt
+    ```
+
+****
+
+## Run Recognization
+[More detail](./recognition/README.md)
+
+#### Run code
+
+```
+python3 recognition/product_recognition_test.py usr/recognition/hz_chinese_50.txt
+```
