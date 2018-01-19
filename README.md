@@ -106,3 +106,35 @@ python3 training_model/tag_product.py usr/find_frequency_pattern/source.txt usr/
 ```
 python3 recognition/product_recognition_test.py usr/recognition/hz_chinese_50.txt
 ```
+
+從待測試文件中發現的產品名
+  
+      ```
+      保护套
+      工具
+      轮胎
+      家具
+      机械
+      平板电脑
+      电池芯
+      挂壁
+      棉花
+      婴儿手推车
+      苹果
+      宝马
+      海狮
+      干燥剂
+      水果
+      蘑菇
+      座椅
+      家电
+      学习桌
+      推车
+      绳子
+      电话
+      食品
+      糖果
+      婴儿车
+      ```
+     
+   可以看出發現的產品名還滿可靠的
