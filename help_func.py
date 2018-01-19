@@ -2,8 +2,9 @@ import logging
 import os
 
 def check_dir_exist(path):
-	if not os.path.exists(path) and os.path.isdir(path):
+	if not os.path.exists(path):
 		os.makedirs(path)
+		print('makdir {}'.format(path))
 
 def create_log():
 	logger = logging.getLogger()

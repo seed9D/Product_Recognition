@@ -8,7 +8,6 @@ import Tries
 import re
 from collections import Counter, defaultdict, ChainMap
 import math
-import jieba
 from help_func import write_data
 import multiprocessing as mp
 import argparse
@@ -53,11 +52,13 @@ def write_detail(path, dict_):
         for k in sorted_key:
             v = dict_[k]
             # key, joint_probability, mutual entropy, left_entropy, right_entropy
-            wf.write('{}\t{:.6f}\t{:.6f}\t{:6f}\t{:6f}\n'.format(k, float(v[0][0]), float(v[0][1]), float(v[0][2]), float(v[0][3])))
+            wf.write('{}\t{:.6f}\t{:.6f}\t{:6f}\t{:6f}\n'.format(
+                k, float(v[0][0]), float(v[0][1]), float(v[0][2]), float(v[0][3])))
             for left, right, left_pro, right_pro, pro_multiply, MI in v[1:]:
                 wf.write('\t{}\t{}\t{:.6f}\t{:.6f}\t{:.6f}\t{:.6f}\n'.format(
                     left, right, float(left_pro), float(right_pro), float(pro_multiply), float(MI)))
-        
+
+
 def approcimate_total_world_num(string_list):
     total_word_num = 0
     for string in string_list:
@@ -71,8 +72,8 @@ def get_all_distinct_substring(string_list, n_gram=5):
     batch_size = 40
 
     def get_distinct_substring(sentence):
-	    sf = Tries.Suffix_Trees(sentence)
-	    return sf.total_distict_substring()
+        sf = Tries.Suffix_Trees(sentence)
+        return sf.total_distict_substring()
 
     string_list_len = len(string_list)
     # print('total string list len:{}'.format(string_list_len))
@@ -106,6 +107,7 @@ def combine_detail_information(detail_dict, entropy_dict):
             left_ent, right_ent = entropy_dict[key]
             detail_dict[key][0].extend([left_ent, right_ent])
 
+
 def calculate_mutual_entropy(dict_, approcimate_total_word_num):
     def word_probability(word):
         # assert(word_len_statistic), 'word:{} frequency:{} len_statistic:{}'.format(word, dict_[word], word_len_statistic)
@@ -113,11 +115,11 @@ def calculate_mutual_entropy(dict_, approcimate_total_word_num):
     MI_dict = {}
     detail_dict = defaultdict(list)
     for k, v in dict_.items():
-        if v > count_threshold and len(k) > 1:        
+        if v > count_threshold and len(k) > 1:
             marginal_probability = [word_probability(
                 k[:index]) * word_probability(k[index:]) for index in range(1, len(k))]
             marginal_probability = list(
-                filter(lambda x: x > 0, marginal_probability))          
+                filter(lambda x: x > 0, marginal_probability))
             if marginal_probability:
                 min_marginal_probability = min(marginal_probability)
                 join_probability = word_probability(k)
@@ -134,9 +136,10 @@ def calculate_mutual_entropy(dict_, approcimate_total_word_num):
                         left_pro = word_probability(k[:index])
                         right_pro = word_probability(k[index:])
                         pro_multpy = left_pro * right_pro
-                        MI = join_probability * math.log(join_probability / pro_multpy)
+                        MI = join_probability * \
+                            math.log(join_probability / pro_multpy)
                         detail_dict[k].append(
-                            [k[:index], k[index:],  left_pro, right_pro, pro_multpy, MI])
+                            [k[:index], k[index:], left_pro, right_pro, pro_multpy, MI])
                     #   print('\t {} {} {:.6f}'.format(k[:index], k[index:], MI))
                     # print()
 
@@ -184,10 +187,11 @@ def run_batch(*argc):
             print('process: {} {}/{}'.format(curerent_process, index, len(key_list)))
     return result_dict
 
+
 def calculate_free_degree(string_list, dict_):
     def key_mappping():  # find string containing key could reduce computation
         for key in dict_.keys():
-            mapping_list=[]
+            mapping_list = []
             for string in string_list:
                 if string.find(key) > 0:
                     mapping_list.append(string)
@@ -218,7 +222,6 @@ def calculate_free_degree(string_list, dict_):
         entropy_dict = ChainMap(*[result.get() for result in multi_result])
         return entropy_dict
 
-
     entropy_dict = {}
     print('computation complexity: key len  {} string list {}'.format(
         len(dict_.keys()), len(string_list)))
@@ -235,7 +238,7 @@ def calculate_free_degree(string_list, dict_):
 
 def find_frequency_pattern(source_file, MI_entropy_path, neighbor_entropy_path, detail_information_path):
     string_list = read_source_file(source_file)
-    
+
     # approcimate_total_word_num = approcimate_total_world_num(string_list)
     approcimate_total_word_num = len(string_list)
     print('total world len', approcimate_total_word_num)
@@ -249,7 +252,8 @@ def find_frequency_pattern(source_file, MI_entropy_path, neighbor_entropy_path, 
                ('\t'.join([key, str(ent)]) for key, ent in list(sort_entropy)))
 
     entropy_dict = calculate_free_degree(string_list, MI_dict)
-    sort_entropy = sorted(entropy_dict.items(), key=lambda x: x[1], reverse=True)
+    sort_entropy = sorted(entropy_dict.items(),
+                          key=lambda x: x[1], reverse=True)
     write_data(neighbor_entropy_path, ('\t'.join(
         [key, str(left), str(right)]) for key, (left, right) in list(sort_entropy)))
 
@@ -261,10 +265,10 @@ def find_frequency_pattern(source_file, MI_entropy_path, neighbor_entropy_path, 
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--user_dir',
-        help='user dir path',
-        action='store', 
-        dest='user_dir', 
-        default=os.path.join(root_dir, 'usr'))
+                        help='user dir path',
+                        action='store',
+                        dest='user_dir',
+                        default=os.path.join(root_dir, 'usr'))
     default_user_dir = parser.parse_args().user_dir
     parser.add_argument('--source',
                         help='the file you want to find new word in',
@@ -274,7 +278,7 @@ def main():
     parser.add_argument('--MI_entropy', help='output Mutual entropy file path',
                         action='store', dest='MI_entropy_path', default=os.path.join(default_user_dir, sub_dir, 'word_mutual_entropy.txt'))
     parser.add_argument('--neighbor_entropy', help='output neighbor entropy file path',
-                        action='store', dest='neighbor_entropy_path', default=os.path.join(default_user_dir, sub_dir , 'word_entropy.txt'))
+                        action='store', dest='neighbor_entropy_path', default=os.path.join(default_user_dir, sub_dir, 'word_entropy.txt'))
     parser.add_argument('--detail_inforamtion', help='output neightbor entropy and mutual entropy file path',
                         action='store', dest='detail_information_path', default=os.path.join(default_user_dir, sub_dir, 'detail_information.txt'))
     args = parser.parse_args()
@@ -283,6 +287,6 @@ def main():
     find_frequency_pattern(
         args.source_file, args.MI_entropy_path, args.neighbor_entropy_path, args.detail_information_path)
 
+
 if __name__ == '__main__':
     main()
-    
